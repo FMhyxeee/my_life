@@ -1,6 +1,7 @@
 import { Archive, RotateCcw } from "lucide-react";
 import type { Ending, RunState } from "../../engine/types";
 import { AttributePanel } from "../components/AttributePanel";
+import { FatePanel } from "../components/FatePanel";
 import { LifeTimeline } from "../components/LifeTimeline";
 
 export function EndingScreen({
@@ -37,7 +38,10 @@ export function EndingScreen({
       </section>
       <div className="ending-grid">
         <AttributePanel stats={run.stats} />
-        <LifeTimeline history={run.history} />
+        <div className="side-column">
+          <FatePanel run={run} />
+          <LifeTimeline history={run.history} />
+        </div>
       </div>
     </main>
   );

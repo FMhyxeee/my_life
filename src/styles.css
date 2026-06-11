@@ -382,6 +382,42 @@ h2 {
   line-height: 1.5;
 }
 
+.side-column {
+  display: grid;
+  gap: 18px;
+}
+
+.fate-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fate-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  color: #283331;
+  background: rgba(24, 127, 116, 0.11);
+  border: 1px solid rgba(24, 127, 116, 0.22);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.fate-pill.world {
+  color: #7a2f34;
+  background: rgba(174, 72, 77, 0.11);
+  border-color: rgba(174, 72, 77, 0.24);
+}
+
+.fate-pill.milestone {
+  color: #6e4a14;
+  background: rgba(176, 121, 42, 0.13);
+  border-color: rgba(176, 121, 42, 0.25);
+}
+
 .ending-layout {
   display: grid;
   gap: 18px;

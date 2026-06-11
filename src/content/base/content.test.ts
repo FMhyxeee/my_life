@@ -17,6 +17,11 @@ function collectTriggeredEndingIds(events: LifeEvent[]): string[] {
 }
 
 describe("base content", () => {
+  it("has enough narrative volume for a replayable fate simulator", () => {
+    expect(baseContent.events.length).toBeGreaterThanOrEqual(30);
+    expect(baseContent.endings.length).toBeGreaterThanOrEqual(10);
+  });
+
   it("has unique event ids and valid choices", () => {
     const eventIds = new Set(baseContent.events.map((event) => event.id));
 
@@ -28,8 +33,45 @@ describe("base content", () => {
       expect(choiceIds.size).toBe(event.choices.length);
       for (const choice of event.choices) {
         expect(choice.text.trim()).not.toBe("");
+        expect(
+          choice.effects.some((effect) => effect.type !== "advanceTime"),
+        ).toBe(true);
       }
     }
+  });
+
+  it("uses worldline tags to make choices change more than personal stats", () => {
+    const worldlineTags = new Set(
+      baseContent.events.flatMap((event) =>
+        event.choices.flatMap((choice) =>
+          choice.effects
+            .filter(
+              (effect): effect is Extract<Effect, { type: "tag" }> =>
+                effect.type === "tag" && effect.tag.startsWith("world_"),
+            )
+            .map((effect) => effect.tag),
+        ),
+      ),
+    );
+
+    expect(worldlineTags.size).toBeGreaterThanOrEqual(8);
+  });
+
+  it("keeps the fate theme visible in events and endings", () => {
+    const combinedText = [
+      ...baseContent.events.flatMap((event) => [
+        event.title,
+        event.body,
+        ...event.choices.map((choice) => choice.text),
+      ]),
+      ...baseContent.endings.flatMap((ending) => [
+        ending.title,
+        ending.body,
+      ]),
+    ].join("");
+
+    expect(combinedText).toContain("命");
+    expect(combinedText).toContain("由人");
   });
 
   it("has unique ending ids and valid trigger references", () => {

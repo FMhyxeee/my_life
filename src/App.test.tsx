@@ -24,12 +24,13 @@ describe("App", () => {
     await user.type(screen.getByLabelText("随机种子"), "ui-seed");
     await user.click(screen.getByRole("button", { name: /开始/ }));
 
-    expect(screen.getByText("出生背景")).toBeInTheDocument();
+    expect(screen.getByText("命盘初定")).toBeInTheDocument();
     expect(screen.getByText(/0 岁/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /在稳定照料中长大/ }));
+    await user.click(screen.getByRole("button", { name: /被许多双手稳稳接住/ }));
 
     expect(screen.getByText(/4 岁/)).toBeInTheDocument();
-    expect(screen.getByText("出生背景")).toBeInTheDocument();
+    expect(screen.getByText("命盘初定")).toBeInTheDocument();
+    expect(screen.getByText("命运线")).toBeInTheDocument();
   });
 });

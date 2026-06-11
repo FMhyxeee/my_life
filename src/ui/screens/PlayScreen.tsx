@@ -2,6 +2,7 @@ import { Archive, RotateCcw } from "lucide-react";
 import type { RunState } from "../../engine/types";
 import { AttributePanel } from "../components/AttributePanel";
 import { EventCard } from "../components/EventCard";
+import { FatePanel } from "../components/FatePanel";
 import { LifeTimeline } from "../components/LifeTimeline";
 
 export function PlayScreen({
@@ -44,7 +45,10 @@ export function PlayScreen({
             </section>
           )}
         </div>
-        <LifeTimeline history={run.history} />
+        <div className="side-column">
+          <FatePanel run={run} />
+          <LifeTimeline history={run.history} />
+        </div>
       </div>
     </main>
   );
