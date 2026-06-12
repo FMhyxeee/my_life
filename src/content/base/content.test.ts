@@ -91,7 +91,39 @@ describe("base content", () => {
     ].join("");
 
     expect(combinedText).toContain("命");
-    expect(combinedText).toContain("由人");
+  });
+
+  it("keeps the full fate motto only in hidden story content", () => {
+    const motto = "万般都是命，半点不由人";
+    const publicEvents = baseContent.events.filter(
+      (event) => !event.hidden,
+    );
+    const hiddenEvents = baseContent.events.filter(
+      (event) => event.hidden,
+    );
+    const publicText = [
+      ...publicEvents.flatMap((event) => [
+        event.title,
+        event.body,
+        ...event.choices.map((choice) => choice.text),
+      ]),
+      ...baseContent.endings.flatMap((ending) => [
+        ending.title,
+        ending.body,
+      ]),
+    ].join("");
+    const hiddenText = hiddenEvents
+      .flatMap((event) => [
+        event.title,
+        event.body,
+        ...event.choices.map((choice) => choice.text),
+      ])
+      .join("");
+
+    expect(publicText).not.toContain(motto);
+    expect(publicText).not.toContain("万般都是命");
+    expect(publicText).not.toContain("半点不由人");
+    expect(hiddenText).toContain(motto);
   });
 
   it("has unique ending ids and valid trigger references", () => {

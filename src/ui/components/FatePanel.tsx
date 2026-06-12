@@ -32,6 +32,7 @@ const tagLabels: Record<string, string> = {
   late_bloom: "迟来开花",
   reconciled_elder: "晚年和解",
   legacy_keeper: "留灯之人",
+  hidden_fate_line_found: "纸背暗线",
 };
 
 const milestoneLabels: Record<string, string> = {
@@ -45,6 +46,7 @@ const milestoneLabels: Record<string, string> = {
   old_debt_returned: "旧债在中年回来",
   bloomed_late: "迟来的开花",
   told_the_weight_of_fate: "把命运的重量讲给后来者",
+  read_the_hidden_fate_line: "读到纸背那句话",
 };
 
 function humanize(value: string): string {

@@ -113,6 +113,7 @@ export type LifeEvent = {
   once?: boolean;
   milestone?: boolean;
   fallback?: boolean;
+  hidden?: boolean;
 };
 
 export type Ending = {
