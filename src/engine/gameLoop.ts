@@ -49,6 +49,76 @@ function finishRun(state: RunState, endings: Ending[]): RunState {
   };
 }
 
+function applyChoiceToRun(
+  state: RunState,
+  currentEvent: LifeEvent,
+  choiceId: string,
+): RunState {
+  const choice = currentEvent.choices.find((item) => item.id === choiceId);
+
+  if (!choice) {
+    throw new Error(`Choice "${choiceId}" does not exist on event "${currentEvent.id}"`);
+  }
+
+  const withHistory: RunState = {
+    ...state,
+    seenEventIds: uniqueAppend(state.seenEventIds, currentEvent.id),
+    history: [
+      ...state.history,
+      {
+        age: state.currentAge,
+        stage: state.currentStage,
+        eventId: currentEvent.id,
+        eventTitle: currentEvent.title,
+        choiceId: choice.id,
+        choiceText: choice.text,
+        auto: currentEvent.auto,
+        interlude: currentEvent.interlude,
+      },
+    ],
+    currentEvent: null,
+    updatedAt: new Date().toISOString(),
+  };
+
+  return applyEffects(withHistory, choice.effects);
+}
+
+function continueToPlayableEvent(
+  state: RunState,
+  events: LifeEvent[],
+  endings?: Ending[],
+): RunState {
+  let nextState = state;
+  const rng = createRng(nextState.rngState);
+
+  for (let guard = 0; guard < 140; guard += 1) {
+    const currentEvent = pickNextEvent(nextState, events, rng);
+    const withCurrentEvent: RunState = {
+      ...nextState,
+      currentEvent,
+      rngState: rng.getState(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (!currentEvent.auto) {
+      return withCurrentEvent;
+    }
+
+    const autoChoice = currentEvent.choices[0];
+    if (!autoChoice) {
+      throw new Error(`Auto event "${currentEvent.id}" does not have a choice`);
+    }
+
+    nextState = applyChoiceToRun(withCurrentEvent, currentEvent, autoChoice.id);
+
+    if (nextState.pendingEndingId || nextState.currentAge >= 90) {
+      return endings ? finishRun(nextState, endings) : nextState;
+    }
+  }
+
+  throw new Error("Auto event resolution exceeded the safety limit");
+}
+
 export function createNewRun(input: NewRunInput): RunState {
   const seed = input.seed.trim() || crypto.randomUUID();
   const now = new Date().toISOString();
@@ -76,15 +146,7 @@ export function createNewRun(input: NewRunInput): RunState {
 }
 
 export function startRun(state: RunState, events: LifeEvent[]): RunState {
-  const rng = createRng(state.rngState);
-  const currentEvent = pickNextEvent(state, events, rng);
-
-  return {
-    ...state,
-    currentEvent,
-    rngState: rng.getState(),
-    updatedAt: new Date().toISOString(),
-  };
+  return continueToPlayableEvent(state, events);
 }
 
 export function advanceRun(
@@ -102,35 +164,11 @@ export function advanceRun(
   }
 
   const currentEvent = state.currentEvent;
-  const choice = currentEvent.choices.find((item) => item.id === choiceId);
-
-  if (!choice) {
-    throw new Error(`Choice "${choiceId}" does not exist on event "${currentEvent.id}"`);
-  }
-
-  const withHistory: RunState = {
-    ...state,
-    seenEventIds: uniqueAppend(state.seenEventIds, currentEvent.id),
-    history: [
-      ...state.history,
-      {
-        age: state.currentAge,
-        stage: state.currentStage,
-        eventId: currentEvent.id,
-        eventTitle: currentEvent.title,
-        choiceId: choice.id,
-        choiceText: choice.text,
-      },
-    ],
-    currentEvent: null,
-    updatedAt: new Date().toISOString(),
-  };
-
-  const afterEffects = applyEffects(withHistory, choice.effects);
+  const afterEffects = applyChoiceToRun(state, currentEvent, choiceId);
 
   if (afterEffects.pendingEndingId || afterEffects.currentAge >= 90) {
     return finishRun(afterEffects, endings);
   }
 
-  return startRun(afterEffects, events);
+  return continueToPlayableEvent(afterEffects, events, endings);
 }

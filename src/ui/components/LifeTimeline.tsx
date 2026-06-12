@@ -16,7 +16,10 @@ export function LifeTimeline({ history }: { history: LifeHistoryEntry[] }) {
             .slice(0, 8)
             .map((entry, index) => (
               <li key={`${entry.eventId}-${entry.choiceId}-${index}`}>
-                <span>{entry.age} 岁</span>
+                <span>
+                  {entry.age} 岁
+                  {entry.interlude ? " · 阶段" : entry.auto ? " · 年岁" : ""}
+                </span>
                 <strong>{entry.eventTitle}</strong>
                 <p>{entry.choiceText}</p>
               </li>

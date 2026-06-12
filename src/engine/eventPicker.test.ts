@@ -72,6 +72,27 @@ describe("eventPicker", () => {
     );
   });
 
+  it("prioritizes stage interludes over ordinary eligible events", () => {
+    const state = createTestRunState({ currentAge: 18, currentStage: "teen" });
+    const ordinaryEvent = createTestEvent({
+      id: "ordinary_exam",
+      stage: "teen",
+      trigger: { minAge: 18, maxAge: 18 },
+      weight: 1000,
+    });
+    const interludeEvent = createTestEvent({
+      id: "stage_teen_end",
+      stage: "teen",
+      trigger: { minAge: 18, maxAge: 18 },
+      interlude: true,
+      weight: 1,
+    });
+
+    expect(
+      pickNextEvent(state, [ordinaryEvent, interludeEvent], createRng("x")).id,
+    ).toBe("stage_teen_end");
+  });
+
   it("selects events deterministically for the same seed", () => {
     const state = createTestRunState();
     const events = [

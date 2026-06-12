@@ -207,19 +207,34 @@ describe("base content", () => {
     );
   });
 
-  it("gives every annual fallback story multiple timeline-shaping choices", () => {
+  it("keeps annual fallback stories as automatic narrative records", () => {
     const timelineTagPattern = /^(weather|scene|era|fate)_/;
 
     for (const event of annualFallbackEvents()) {
-      expect(event.choices.length).toBeGreaterThanOrEqual(3);
-      for (const choice of event.choices) {
-        expect(
-          choice.effects.some(
-            (effect) =>
-              effect.type === "tag" && timelineTagPattern.test(effect.tag),
-          ),
-        ).toBe(true);
-      }
+      expect(event.auto).toBe(true);
+      expect(event.choices).toHaveLength(1);
+      expect(
+        event.choices[0].effects.some(
+          (effect) =>
+            effect.type === "tag" && timelineTagPattern.test(effect.tag),
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it("uses stage interlude events to make life phases feel distinct", () => {
+    const interludeEvents = baseContent.events.filter((event) => event.interlude);
+
+    expect(interludeEvents.map((event) => event.id)).toEqual([
+      "stage_childhood_end",
+      "stage_teen_end",
+      "stage_young_adult_end",
+      "stage_middle_arrival",
+      "stage_elder_arrival",
+    ]);
+    for (const event of interludeEvents) {
+      expect(event.auto).not.toBe(true);
+      expect(event.choices).toHaveLength(1);
     }
   });
 

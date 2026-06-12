@@ -281,6 +281,13 @@ h2 {
   font-size: 0.88rem;
 }
 
+.stat-label strong {
+  max-width: 5.5em;
+  color: #202124;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
 .stat-track {
   height: 7px;
   overflow: hidden;
@@ -309,6 +316,15 @@ h2 {
   min-height: 420px;
   display: flex;
   flex-direction: column;
+}
+
+.interlude-card {
+  border-color: rgba(176, 121, 42, 0.38);
+  background: #fffdf8;
+}
+
+.interlude-card h2 {
+  color: #6e4f22;
 }
 
 .event-meta {

@@ -114,6 +114,8 @@ export type LifeEvent = {
   milestone?: boolean;
   fallback?: boolean;
   hidden?: boolean;
+  auto?: boolean;
+  interlude?: boolean;
 };
 
 export type Ending = {
@@ -131,6 +133,8 @@ export type LifeHistoryEntry = {
   eventTitle: string;
   choiceId: string;
   choiceText: string;
+  auto?: boolean;
+  interlude?: boolean;
 };
 
 export type RunStatus = "playing" | "ended";

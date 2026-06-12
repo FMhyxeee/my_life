@@ -35,7 +35,7 @@ export function PlayScreen({
         </div>
       </header>
       <div className="play-grid">
-        <AttributePanel stats={run.stats} />
+        <AttributePanel mode="qualitative" stats={run.stats} />
         <div className="main-column">
           {run.currentEvent ? (
             <EventCard event={run.currentEvent} run={run} onChoose={onChoose} />

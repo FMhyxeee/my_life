@@ -29,6 +29,11 @@ export function pickNextEvent(
   rng: SeededRng,
 ): LifeEvent {
   const eligibleEvents = getEligibleEvents(state, events);
+  const interludeEvents = eligibleEvents.filter((event) => event.interlude);
+
+  if (interludeEvents.length > 0) {
+    return rng.weightedPick(interludeEvents, (event) => event.weight);
+  }
 
   if (eligibleEvents.length > 0) {
     return rng.weightedPick(eligibleEvents, (event) => event.weight);

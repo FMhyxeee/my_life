@@ -146,15 +146,16 @@ function pickAnnualText(texts: Record<LifeStage, string[]>, stage: LifeStage, ag
   return options[age % options.length];
 }
 
-function annualChoiceSet(stage: LifeStage, age: number): Choice[] {
+function annualAutoChoice(stage: LifeStage, age: number): Choice {
   const weatherTag = weatherTags[age % weatherTags.length];
   const sceneTag = sceneTags[age % sceneTags.length];
   const eraTag = eraTags[age % eraTags.length];
   const fateTag = fateTags[age % fateTags.length];
+  const mode = age % 4;
 
-  return [
-    {
-      id: "weather_turn",
+  if (mode === 0) {
+    return {
+      id: "weather_trace",
       text: pickAnnualText(annualWeatherTexts, stage, age),
       effects: [
         ...annualBaseEffects(stage),
@@ -162,9 +163,12 @@ function annualChoiceSet(stage: LifeStage, age: number): Choice[] {
         stat("mindset", weatherTag === "weather_clear_sun" ? 2 : 0),
         tag(weatherTag),
       ],
-    },
-    {
-      id: "scene_detour",
+    };
+  }
+
+  if (mode === 1) {
+    return {
+      id: "scene_trace",
       text: pickAnnualText(annualSceneTexts, stage, age),
       effects: [
         ...annualBaseEffects(stage),
@@ -172,9 +176,12 @@ function annualChoiceSet(stage: LifeStage, age: number): Choice[] {
         stat("stress", sceneTag === "scene_hospital_corridor" ? 2 : -1),
         tag(sceneTag),
       ],
-    },
-    {
-      id: "era_ripple",
+    };
+  }
+
+  if (mode === 2) {
+    return {
+      id: "era_trace",
       text: pickAnnualText(annualEraTexts, stage, age),
       effects: [
         ...annualBaseEffects(stage),
@@ -183,18 +190,19 @@ function annualChoiceSet(stage: LifeStage, age: number): Choice[] {
         stat("stress", 2),
         tag(eraTag),
       ],
-    },
-    {
-      id: "fate_small_shift",
-      text: pickAnnualText(annualFateTexts, stage, age),
-      effects: [
-        ...annualBaseEffects(stage),
-        stat("luck", fateTag === "fate_unexpected_help" ? 3 : 1),
-        stat("mindset", 2),
-        tag(fateTag),
-      ],
-    },
-  ];
+    };
+  }
+
+  return {
+    id: "fate_trace",
+    text: pickAnnualText(annualFateTexts, stage, age),
+    effects: [
+      ...annualBaseEffects(stage),
+      stat("luck", fateTag === "fate_unexpected_help" ? 3 : 1),
+      stat("mindset", 2),
+      tag(fateTag),
+    ],
+  };
 }
 
 const annualFallbackEvents: LifeEvent[] = Array.from(
@@ -212,7 +220,8 @@ const annualFallbackEvents: LifeEvent[] = Array.from(
       trigger: { minAge: age, maxAge: age },
       weight: 1,
       fallback: true,
-      choices: annualChoiceSet(stage, age),
+      auto: true,
+      choices: [annualAutoChoice(stage, age)],
     };
   },
 );
@@ -1244,6 +1253,114 @@ const wealthTimelineEvents: LifeEvent[] = [
           tag("wealth_leverage_bet"),
           tag("wealth_risk_mark"),
           tag("world_capital_wind"),
+          years(1),
+        ],
+      },
+    ],
+  },
+];
+
+const stageInterludeEvents: LifeEvent[] = [
+  {
+    id: "stage_childhood_end",
+    stage: "child",
+    title: "童年落幕",
+    body: "十二岁的夏天很长，长到你以为院墙、课本和饭桌上的声音会一直这样下去。可某天醒来，你发现童年没有告别，只是把门从身后轻轻带上了。",
+    trigger: { minAge: 12, maxAge: 12 },
+    weight: 1000,
+    once: true,
+    interlude: true,
+    choices: [
+      {
+        id: "enter_teen_years",
+        text: "把书包背上肩，走进少年",
+        effects: [
+          tag("stage_childhood_end_seen"),
+          milestone("childhood_closed_quietly"),
+          years(1),
+        ],
+      },
+    ],
+  },
+  {
+    id: "stage_teen_end",
+    stage: "teen",
+    title: "少年退场",
+    body: "十八岁没有想象中那么响。考卷、车票、告白、没说完的话一起散在风里。你站在门槛上，第一次明白往前走也会失去东西。",
+    trigger: { minAge: 18, maxAge: 18 },
+    weight: 1000,
+    once: true,
+    interlude: true,
+    choices: [
+      {
+        id: "enter_adult_years",
+        text: "带着未完成的自己往前走",
+        effects: [
+          tag("stage_teen_end_seen"),
+          milestone("teen_years_folded_away"),
+          years(1),
+        ],
+      },
+    ],
+  },
+  {
+    id: "stage_young_adult_end",
+    stage: "adult",
+    title: "青年余温",
+    body: "三十岁前后，很多事忽然开始要你给答案。理想还在，账单也在；喜欢过的人、错过的机会、第一笔真正的钱，都在背后发出细小的声响。",
+    trigger: { minAge: 30, maxAge: 30 },
+    weight: 1000,
+    once: true,
+    interlude: true,
+    choices: [
+      {
+        id: "enter_deeper_adulthood",
+        text: "把余温收好，继续偿还生活",
+        effects: [
+          tag("stage_young_adult_end_seen"),
+          milestone("youth_warmth_kept"),
+          years(1),
+        ],
+      },
+    ],
+  },
+  {
+    id: "stage_middle_arrival",
+    stage: "middle",
+    title: "中年旧账",
+    body: "四十五岁之后，旧账开始有名字。身体、亲人、事业、财富、当年的选择，一件件坐到你面前。你不再问人生会不会开始，只问还能不能稳住。",
+    trigger: { minAge: 45, maxAge: 45 },
+    weight: 1000,
+    once: true,
+    interlude: true,
+    choices: [
+      {
+        id: "enter_middle_years",
+        text: "把旧账摊开，继续过日子",
+        effects: [
+          tag("stage_middle_arrival_seen"),
+          milestone("middle_years_accounts_opened"),
+          years(1),
+        ],
+      },
+    ],
+  },
+  {
+    id: "stage_elder_arrival",
+    stage: "elder",
+    title: "晚年回声",
+    body: "六十五岁以后，日子慢了，回声却近了。年轻时绕开的路、中年时忍下的话、某年某场雨，都开始在窗边轻轻回来。",
+    trigger: { minAge: 65, maxAge: 65 },
+    weight: 1000,
+    once: true,
+    interlude: true,
+    choices: [
+      {
+        id: "enter_elder_years",
+        text: "听一听这些回声",
+        effects: [
+          tag("stage_elder_arrival_seen"),
+          milestone("elder_echoes_arrived"),
           years(1),
         ],
       },
@@ -2445,6 +2562,7 @@ export const baseEvents: LifeEvent[] = [
   },
   ...everydayLifeEvents,
   ...wealthTimelineEvents,
+  ...stageInterludeEvents,
   ...annualFallbackEvents,
   {
     id: "ordinary_years",
@@ -2453,6 +2571,7 @@ export const baseEvents: LifeEvent[] = [
     body: "没有戏剧性的转折。日子像水一样从指缝里过去，可水也会慢慢改河道。命数不总是轰然落下，有时只是把这一年悄悄垫在脚下。",
     weight: 1,
     fallback: true,
+    auto: true,
     choices: [
       {
         id: "let_time_pass",

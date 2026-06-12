@@ -96,6 +96,11 @@ const tagLabels: Record<string, string> = {
   wealth_hidden_books: "账本阴影",
   wealth_compound_interest: "复利慢路",
   wealth_leverage_bet: "杠杆赌局",
+  stage_childhood_end_seen: "童年落幕",
+  stage_teen_end_seen: "少年退场",
+  stage_young_adult_end_seen: "青年余温",
+  stage_middle_arrival_seen: "中年旧账",
+  stage_elder_arrival_seen: "晚年回声",
   weather_soft_rain: "天气：细雨偏移",
   weather_clear_sun: "天气：晴日抬头",
   weather_hard_wind: "天气：大风改道",
@@ -144,6 +149,11 @@ const milestoneLabels: Record<string, string> = {
   first_product_launched: "第一个产品上线",
   law_exam_passed: "通过法律考试",
   clean_books_kept: "守住清楚账本",
+  childhood_closed_quietly: "童年悄悄关门",
+  teen_years_folded_away: "少年被折进风里",
+  youth_warmth_kept: "收好青年余温",
+  middle_years_accounts_opened: "摊开中年旧账",
+  elder_echoes_arrived: "晚年回声抵达",
 };
 
 function humanize(value: string): string {

@@ -77,6 +77,65 @@ describe("gameLoop", () => {
     expect(next.currentEvent?.id).toBe("childhood");
   });
 
+  it("auto-records ordinary years until the next meaningful choice", () => {
+    const run = createNewRun({ seed: "abc", name: "小明" });
+    const quietAgeOne = createTestEvent({
+      id: "quiet_age_one",
+      stage: "baby",
+      title: "一岁静年",
+      trigger: { minAge: 1, maxAge: 1 },
+      fallback: true,
+      auto: true,
+      choices: [
+        {
+          id: "year_passes",
+          text: "这一年只在身体里留下很轻的痕迹",
+          effects: [
+            { type: "tag", tag: "ordinary_years_accumulated", action: "add" },
+            { type: "advanceTime", years: 1 },
+          ],
+        },
+      ],
+    });
+    const quietAgeTwo = createTestEvent({
+      id: "quiet_age_two",
+      stage: "baby",
+      title: "两岁静年",
+      trigger: { minAge: 2, maxAge: 2 },
+      fallback: true,
+      auto: true,
+      choices: [
+        {
+          id: "year_passes",
+          text: "这一年没有问题，只留下记录",
+          effects: [
+            { type: "tag", tag: "ordinary_years_accumulated", action: "add" },
+            { type: "advanceTime", years: 1 },
+          ],
+        },
+      ],
+    });
+    const firstChoice = createTestEvent({
+      id: "first_real_choice",
+      stage: "child",
+      title: "第一道真正的岔路",
+      trigger: { minAge: 3, maxAge: 3 },
+    });
+
+    const started = startRun(
+      { ...run, currentAge: 1, currentStage: "baby" },
+      [quietAgeOne, quietAgeTwo, firstChoice],
+    );
+
+    expect(started.currentAge).toBe(3);
+    expect(started.currentEvent?.id).toBe("first_real_choice");
+    expect(started.history.map((entry) => entry.eventId)).toEqual([
+      "quiet_age_one",
+      "quiet_age_two",
+    ]);
+    expect(started.history.every((entry) => entry.auto)).toBe(true);
+  });
+
   it("ends a run when a choice triggers an ending", () => {
     const run = startRun(createNewRun({ seed: "abc", name: "小明" }), [
       createTestEvent({
