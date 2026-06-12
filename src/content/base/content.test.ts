@@ -78,6 +78,43 @@ describe("base content", () => {
     }
   });
 
+  it("covers branching wealth timelines for clean money, gray money, tech, and law", () => {
+    const wealthEvents = baseContent.events.filter((event) =>
+      event.id.startsWith("wealth_"),
+    );
+    const wealthTags = new Set(
+      wealthEvents.flatMap((event) =>
+        event.choices.flatMap((choice) =>
+          choice.effects
+            .filter(
+              (effect): effect is Extract<Effect, { type: "tag" }> =>
+                effect.type === "tag",
+            )
+            .map((effect) => effect.tag),
+        ),
+      ),
+    );
+    const techStartup = wealthEvents.find(
+      (event) => event.id === "wealth_tech_startup",
+    );
+
+    expect(wealthEvents.length).toBeGreaterThanOrEqual(6);
+    for (const tagName of [
+      "wealth_honest_income",
+      "wealth_gray_income",
+      "wealth_tech_degree",
+      "wealth_tech_startup",
+      "wealth_lawyer_path",
+    ]) {
+      expect(wealthTags.has(tagName)).toBe(true);
+    }
+    expect(techStartup?.trigger?.conditions).toContainEqual({
+      type: "tag",
+      tag: "wealth_tech_degree",
+      present: true,
+    });
+  });
+
   it("advances exactly one year per non-ending choice so every age can have a story", () => {
     for (const event of baseContent.events) {
       for (const choice of event.choices) {
