@@ -29,7 +29,8 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: /被许多双手稳稳接住/ }));
 
-    expect(screen.getByText(/4 岁/)).toBeInTheDocument();
+    expect(screen.getByText(/1 岁/)).toBeInTheDocument();
+    expect(screen.getByText("1岁：襁褓余声")).toBeInTheDocument();
     expect(screen.getByText("命盘初定")).toBeInTheDocument();
     expect(screen.getByText("命运线")).toBeInTheDocument();
   });

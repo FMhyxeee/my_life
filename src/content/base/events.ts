@@ -1,4 +1,5 @@
-import type { Effect, LifeEvent, StatKey } from "../../engine/types";
+import { getLifeStage } from "../../engine/stage";
+import type { Effect, LifeEvent, LifeStage, StatKey } from "../../engine/types";
 
 const stat = (key: StatKey, delta: number): Effect => ({
   type: "stat",
@@ -17,8 +18,89 @@ const milestone = (name: string): Effect => ({
   milestone: name,
 });
 
-const years = (value: number): Effect => ({ type: "advanceTime", years: value });
+const years = (_value: number): Effect => ({ type: "advanceTime", years: 1 });
 const end = (endingId: string): Effect => ({ type: "triggerEnding", endingId });
+
+const stageAnnualTitles: Record<LifeStage, string> = {
+  baby: "襁褓余声",
+  child: "院墙与课本",
+  teen: "分数与风",
+  adult: "城中微澜",
+  middle: "旧账新债",
+  elder: "暮色长明",
+};
+
+const annualBodies: Record<LifeStage, string[]> = {
+  baby: [
+    "这一年，你还不懂命是什么，只记得灯光、手心和忽远忽近的哭声。大人替你做决定，命也替你把路往前推了一寸。",
+    "这一年，家里人的语气比天气更能决定你的世界。你学会用哭声回应饥饿，也学会在安静里等人靠近。",
+    "这一年，你在许多怀抱之间长大。有人说小孩子没有记忆，可命运已经把温度和缺口都记在了身上。",
+  ],
+  child: [
+    "这一年，作业本、巷口和饭桌上的话一起长进你的身体。你以为自己在挑选爱好，其实很多门已经先替你开了或关了。",
+    "这一年，你开始知道比较。别人的新书包、自己的旧铅笔、老师的一句夸奖，都像小石子落进命里的水面。",
+    "这一年，童年没有大事，却有许多小小的偏向。你朝某个人靠近，离另一条路远了一点。",
+  ],
+  teen: [
+    "这一年，分数像一把尺，量你，也量你的家。你努力把未来握紧，可命运总从指缝里漏出几粒沙。",
+    "这一年，你开始和自己较劲。喜欢、羞耻、野心和恐惧挤在同一张课桌上，谁也不肯先让座。",
+    "这一年，很多话没有说出口。它们沉下去，变成日后某次选择时忽然冒出的念头。",
+  ],
+  adult: [
+    "这一年，你在城市的缝隙里赶路。工资、房租、人情和身体轮流催促，你以为是在选择，其实是在偿还前面的命数。",
+    "这一年，机会来得不响，压力走得也不响。你把许多委屈折起来收好，像收一张暂时还不能兑现的票。",
+    "这一年，世界线轻轻偏了一下。没有人宣布改变，可你已经站在另一种生活的入口边。",
+  ],
+  middle: [
+    "这一年，旧账开始有回声。身体、家庭、事业和未完成的愿望一起坐到桌前，等你给一个交代。",
+    "这一年，你更少谈梦想，更多计算风险。命运不再像门外的风，倒像屋里的钟，一声一声催人。",
+    "这一年，你发现许多选择不是为了赢，只是为了不让某些东西继续塌下去。",
+  ],
+  elder: [
+    "这一年，日子慢下来，许多往事却走得更近。你回看一生，才发现有些岔路从来不是自己修的。",
+    "这一年，你把名字、旧物和几句叮嘱留给后来的人。命运收走力气，也留下回声。",
+    "这一年，风从窗边过去。你不再急着证明什么，只偶尔想起当年若是另一场雨，人生会不会不同。",
+  ],
+};
+
+const annualEffects = (stage: LifeStage): Effect[] => {
+  const effectsByStage: Record<LifeStage, Effect[]> = {
+    baby: [stat("family", 1), stat("stress", 1)],
+    child: [stat("education", 2), stat("relationships", 1), stat("stress", 1)],
+    teen: [stat("education", 2), stat("mindset", -1), stat("stress", 2)],
+    adult: [stat("career", 2), stat("wealth", 1), stat("health", -1), stat("stress", 2)],
+    middle: [stat("family", 1), stat("career", 1), stat("health", -2), stat("stress", 1)],
+    elder: [stat("mindset", 1), stat("family", 1), stat("health", -2), stat("reputation", 1)],
+  };
+
+  return [...effectsByStage[stage], tag("ordinary_years_accumulated"), years(1)];
+};
+
+const annualFallbackEvents: LifeEvent[] = Array.from(
+  { length: 89 },
+  (_, index) => {
+    const age = index + 1;
+    const stage = getLifeStage(age);
+    const bodies = annualBodies[stage];
+
+    return {
+      id: `annual_year_${age}`,
+      stage,
+      title: `${age}岁：${stageAnnualTitles[stage]}`,
+      body: bodies[age % bodies.length],
+      trigger: { minAge: age, maxAge: age },
+      weight: 1,
+      fallback: true,
+      choices: [
+        {
+          id: "follow_this_year",
+          text: "顺着这一年的命数走",
+          effects: annualEffects(stage),
+        },
+      ],
+    };
+  },
+);
 
 export const baseEvents: LifeEvent[] = [
   {
@@ -1182,11 +1264,12 @@ export const baseEvents: LifeEvent[] = [
       },
     ],
   },
+  ...annualFallbackEvents,
   {
     id: "ordinary_years",
     stage: "any",
-    title: "平常的几年",
-    body: "没有戏剧性的转折。日子像水一样从指缝里过去，可水也会慢慢改河道。",
+    title: "平常的一年",
+    body: "没有戏剧性的转折。日子像水一样从指缝里过去，可水也会慢慢改河道。命数不总是轰然落下，有时只是把这一年悄悄垫在脚下。",
     weight: 1,
     fallback: true,
     choices: [

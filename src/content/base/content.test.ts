@@ -57,6 +57,26 @@ describe("base content", () => {
     expect(worldlineTags.size).toBeGreaterThanOrEqual(8);
   });
 
+  it("advances exactly one year per non-ending choice so every age can have a story", () => {
+    for (const event of baseContent.events) {
+      for (const choice of event.choices) {
+        const triggersEnding = choice.effects.some(
+          (effect) => effect.type === "triggerEnding",
+        );
+        const timeEffects = choice.effects.filter(
+          (effect) => effect.type === "advanceTime",
+        );
+
+        if (triggersEnding) {
+          expect(timeEffects).toHaveLength(0);
+        } else {
+          expect(timeEffects).toHaveLength(1);
+          expect(timeEffects[0]).toMatchObject({ years: 1 });
+        }
+      }
+    }
+  });
+
   it("keeps the fate theme visible in events and endings", () => {
     const combinedText = [
       ...baseContent.events.flatMap((event) => [
@@ -87,6 +107,23 @@ describe("base content", () => {
     expect(baseContent.events.some((event) => event.fallback)).toBe(true);
   });
 
+  it("includes annual fallback stories for every age after birth", () => {
+    const annualFallbackAges = new Set(
+      baseContent.events
+        .filter(
+          (event) =>
+            event.fallback &&
+            event.trigger?.minAge !== undefined &&
+            event.trigger.minAge === event.trigger.maxAge,
+        )
+        .map((event) => event.trigger!.minAge!),
+    );
+
+    expect(annualFallbackAges).toEqual(
+      new Set(Array.from({ length: 89 }, (_, index) => index + 1)),
+    );
+  });
+
   it("can smoke-run multiple complete lives without crashing", () => {
     for (const seed of ["alpha", "beta", "gamma", "delta", "epsilon"]) {
       let run = startRun(
@@ -95,7 +132,7 @@ describe("base content", () => {
       );
       let steps = 0;
 
-      while (run.status !== "ended" && steps < 80) {
+      while (run.status !== "ended" && steps < 120) {
         const choice = run.currentEvent?.choices[0];
         expect(choice).toBeDefined();
         run = advanceRun(run, choice!.id, baseContent.events, baseContent.endings);
@@ -105,6 +142,9 @@ describe("base content", () => {
       expect(run.status).toBe("ended");
       expect(run.endingId).not.toBeNull();
       expect(run.finalScore).not.toBeNull();
+      expect(run.history.map((entry) => entry.age)).toEqual(
+        Array.from({ length: run.history.length }, (_, age) => age),
+      );
     }
   });
 });
