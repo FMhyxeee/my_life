@@ -57,6 +57,18 @@ describe("base content", () => {
     expect(worldlineTags.size).toBeGreaterThanOrEqual(8);
   });
 
+  it("covers everyday life domains with dedicated event chains", () => {
+    const requiredDomains = ["love", "study", "work", "illness", "travel"];
+
+    for (const domain of requiredDomains) {
+      const eventsInDomain = baseContent.events.filter((event) =>
+        event.id.startsWith(`${domain}_`),
+      );
+
+      expect(eventsInDomain.length).toBeGreaterThanOrEqual(4);
+    }
+  });
+
   it("advances exactly one year per non-ending choice so every age can have a story", () => {
     for (const event of baseContent.events) {
       for (const choice of event.choices) {
