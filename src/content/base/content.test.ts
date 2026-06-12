@@ -16,6 +16,15 @@ function collectTriggeredEndingIds(events: LifeEvent[]): string[] {
   );
 }
 
+function annualFallbackEvents(): LifeEvent[] {
+  return baseContent.events.filter(
+    (event) =>
+      event.fallback &&
+      event.trigger?.minAge !== undefined &&
+      event.trigger.minAge === event.trigger.maxAge,
+  );
+}
+
 describe("base content", () => {
   it("has enough narrative volume for a replayable fate simulator", () => {
     expect(baseContent.events.length).toBeGreaterThanOrEqual(30);
@@ -153,19 +162,28 @@ describe("base content", () => {
 
   it("includes annual fallback stories for every age after birth", () => {
     const annualFallbackAges = new Set(
-      baseContent.events
-        .filter(
-          (event) =>
-            event.fallback &&
-            event.trigger?.minAge !== undefined &&
-            event.trigger.minAge === event.trigger.maxAge,
-        )
-        .map((event) => event.trigger!.minAge!),
+      annualFallbackEvents().map((event) => event.trigger!.minAge!),
     );
 
     expect(annualFallbackAges).toEqual(
       new Set(Array.from({ length: 89 }, (_, index) => index + 1)),
     );
+  });
+
+  it("gives every annual fallback story multiple timeline-shaping choices", () => {
+    const timelineTagPattern = /^(weather|scene|era|fate)_/;
+
+    for (const event of annualFallbackEvents()) {
+      expect(event.choices.length).toBeGreaterThanOrEqual(3);
+      for (const choice of event.choices) {
+        expect(
+          choice.effects.some(
+            (effect) =>
+              effect.type === "tag" && timelineTagPattern.test(effect.tag),
+          ),
+        ).toBe(true);
+      }
+    }
   });
 
   it("can smoke-run multiple complete lives without crashing", () => {

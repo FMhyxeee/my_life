@@ -1,5 +1,5 @@
 import { getLifeStage } from "../../engine/stage";
-import type { Effect, LifeEvent, LifeStage, StatKey } from "../../engine/types";
+import type { Choice, Effect, LifeEvent, LifeStage, StatKey } from "../../engine/types";
 
 const stat = (key: StatKey, delta: number): Effect => ({
   type: "stat",
@@ -63,7 +63,7 @@ const annualBodies: Record<LifeStage, string[]> = {
   ],
 };
 
-const annualEffects = (stage: LifeStage): Effect[] => {
+const annualBaseEffects = (stage: LifeStage): Effect[] => {
   const effectsByStage: Record<LifeStage, Effect[]> = {
     baby: [stat("family", 1), stat("stress", 1)],
     child: [stat("education", 2), stat("relationships", 1), stat("stress", 1)],
@@ -75,6 +75,127 @@ const annualEffects = (stage: LifeStage): Effect[] => {
 
   return [...effectsByStage[stage], tag("ordinary_years_accumulated"), years(1)];
 };
+
+const annualWeatherTexts: Record<LifeStage, string[]> = {
+  baby: ["在潮湿的夜里被抱紧", "在晴窗下睡过一个午后"],
+  child: ["冒雨跑过操场", "在大风天守住作业本"],
+  teen: ["在闷热晚风里继续赶路", "在忽冷忽热的季节里熬过考试"],
+  adult: ["顶着突来的雨去办事", "在晴天里多走一站路"],
+  middle: ["在寒潮里照常奔波", "在暴雨前赶回家"],
+  elder: ["靠窗等一场雨停", "在难得的好天气里出门走走"],
+};
+
+const annualSceneTexts: Record<LifeStage, string[]> = {
+  baby: ["被推到巷口晒太阳", "听见楼下人声慢慢远去"],
+  child: ["在小卖部门口停了一会儿", "绕到操场边看别人比赛"],
+  teen: ["从学校后门绕路回家", "在车站等一班迟到的车"],
+  adult: ["在地铁口改了路线", "走进一间陌生的小店"],
+  middle: ["在医院走廊坐了半小时", "在社区公告栏前停下"],
+  elder: ["在旧街口认了很久路", "坐在公园长椅上看人来人往"],
+};
+
+const annualEraTexts: Record<LifeStage, string[]> = {
+  baby: ["家里听见一条远处的大新闻", "大人们在饭桌边谈起新的规矩"],
+  child: ["学校换了新的通知", "街口开始修一条新路"],
+  teen: ["一项政策改变了身边人的打算", "新的风潮吹进了班级"],
+  adult: ["公司跟着行业风向调整", "城市出台一条新规定"],
+  middle: ["社区和行业同时换了节奏", "一场公共事件改变了安排"],
+  elder: ["旧城更新的公告贴了出来", "窗口政策又改了一次"],
+};
+
+const annualFateTexts: Record<LifeStage, string[]> = {
+  baby: ["错过一次小小的磕碰", "被一个陌生人逗笑"],
+  child: ["捡到一枚旧硬币", "因为绕路认识一个朋友"],
+  teen: ["迟到一分钟，却避开一场尴尬", "误拿的本子改变了心情"],
+  adult: ["错过一班车，遇见另一个机会", "一通电话让计划转了弯"],
+  middle: ["临时改约，避开一场麻烦", "一句闲话让你重新盘算"],
+  elder: ["忘带钥匙，却多晒了一会儿太阳", "旧人忽然在消息里出现"],
+};
+
+const weatherTags = [
+  "weather_soft_rain",
+  "weather_clear_sun",
+  "weather_hard_wind",
+  "weather_sudden_cold",
+];
+
+const sceneTags = [
+  "scene_neighborhood_corner",
+  "scene_school_yard",
+  "scene_station_platform",
+  "scene_hospital_corridor",
+  "scene_old_street",
+];
+
+const eraTags = [
+  "era_policy_notice",
+  "era_city_rebuild",
+  "era_market_shift",
+  "era_public_event",
+];
+
+const fateTags = [
+  "fate_late_bus",
+  "fate_wrong_turn",
+  "fate_unexpected_help",
+  "fate_missed_signal",
+];
+
+function pickAnnualText(texts: Record<LifeStage, string[]>, stage: LifeStage, age: number) {
+  const options = texts[stage];
+  return options[age % options.length];
+}
+
+function annualChoiceSet(stage: LifeStage, age: number): Choice[] {
+  const weatherTag = weatherTags[age % weatherTags.length];
+  const sceneTag = sceneTags[age % sceneTags.length];
+  const eraTag = eraTags[age % eraTags.length];
+  const fateTag = fateTags[age % fateTags.length];
+
+  return [
+    {
+      id: "weather_turn",
+      text: pickAnnualText(annualWeatherTexts, stage, age),
+      effects: [
+        ...annualBaseEffects(stage),
+        stat("health", weatherTag === "weather_sudden_cold" ? -2 : 1),
+        stat("mindset", weatherTag === "weather_clear_sun" ? 2 : 0),
+        tag(weatherTag),
+      ],
+    },
+    {
+      id: "scene_detour",
+      text: pickAnnualText(annualSceneTexts, stage, age),
+      effects: [
+        ...annualBaseEffects(stage),
+        stat("relationships", 2),
+        stat("stress", sceneTag === "scene_hospital_corridor" ? 2 : -1),
+        tag(sceneTag),
+      ],
+    },
+    {
+      id: "era_ripple",
+      text: pickAnnualText(annualEraTexts, stage, age),
+      effects: [
+        ...annualBaseEffects(stage),
+        stat("career", stage === "adult" || stage === "middle" ? 2 : 0),
+        stat("risk", eraTag === "era_public_event" ? 2 : 1),
+        stat("stress", 2),
+        tag(eraTag),
+      ],
+    },
+    {
+      id: "fate_small_shift",
+      text: pickAnnualText(annualFateTexts, stage, age),
+      effects: [
+        ...annualBaseEffects(stage),
+        stat("luck", fateTag === "fate_unexpected_help" ? 3 : 1),
+        stat("mindset", 2),
+        tag(fateTag),
+      ],
+    },
+  ];
+}
 
 const annualFallbackEvents: LifeEvent[] = Array.from(
   { length: 89 },
@@ -91,13 +212,7 @@ const annualFallbackEvents: LifeEvent[] = Array.from(
       trigger: { minAge: age, maxAge: age },
       weight: 1,
       fallback: true,
-      choices: [
-        {
-          id: "follow_this_year",
-          text: "顺着这一年的命数走",
-          effects: annualEffects(stage),
-        },
-      ],
+      choices: annualChoiceSet(stage, age),
     };
   },
 );

@@ -74,6 +74,23 @@ const tagLabels: Record<string, string> = {
   travel_could_not_rest: "假期仍忙",
   travel_foreign_morning: "异城清晨",
   travel_kept_close: "谨慎旅程",
+  weather_soft_rain: "天气：细雨偏移",
+  weather_clear_sun: "天气：晴日抬头",
+  weather_hard_wind: "天气：大风改道",
+  weather_sudden_cold: "天气：寒意压身",
+  scene_neighborhood_corner: "场景：巷口停顿",
+  scene_school_yard: "场景：操场边缘",
+  scene_station_platform: "场景：站台岔路",
+  scene_hospital_corridor: "场景：医院走廊",
+  scene_old_street: "场景：旧街回声",
+  era_policy_notice: "时代：政策通知",
+  era_city_rebuild: "时代：城市更新",
+  era_market_shift: "时代：市场转向",
+  era_public_event: "时代：公共波动",
+  fate_late_bus: "命运：晚到一班车",
+  fate_wrong_turn: "命运：绕错路",
+  fate_unexpected_help: "命运：意外援手",
+  fate_missed_signal: "命运：错过信号",
 };
 
 const milestoneLabels: Record<string, string> = {
@@ -105,6 +122,10 @@ const milestoneLabels: Record<string, string> = {
 function humanize(value: string): string {
   return value
     .replace(/^world_/, "世界线：")
+    .replace(/^weather_/, "天气：")
+    .replace(/^scene_/, "场景：")
+    .replace(/^era_/, "时代：")
+    .replace(/^fate_/, "命运：")
     .replaceAll("_", " ");
 }
 
