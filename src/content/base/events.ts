@@ -13,6 +13,12 @@ const tag = (name: string): Effect => ({
   action: "add",
 });
 
+const untag = (name: string): Effect => ({
+  type: "tag",
+  tag: name,
+  action: "remove",
+});
+
 const milestone = (name: string): Effect => ({
   type: "milestone",
   milestone: name,
@@ -997,7 +1003,10 @@ const wealthTimelineEvents: LifeEvent[] = [
     trigger: {
       minAge: 18,
       maxAge: 32,
-      conditions: [{ type: "stat", stat: "education", op: ">=", value: 30 }],
+      conditions: [
+        { type: "stat", stat: "education", op: ">=", value: 30 },
+        { type: "tag", tag: "career_track_legal", present: false },
+      ],
     },
     weight: 17,
     once: true,
@@ -1013,6 +1022,7 @@ const wealthTimelineEvents: LifeEvent[] = [
           stat("stress", 7),
           tag("wealth_tech_degree"),
           tag("wealth_code_skill"),
+          tag("career_track_tech"),
           tag("world_tech_venture"),
           milestone("tech_degree_earned"),
           years(1),
@@ -1043,6 +1053,7 @@ const wealthTimelineEvents: LifeEvent[] = [
       maxAge: 45,
       conditions: [
         { type: "tag", tag: "wealth_tech_degree", present: true },
+        { type: "tag", tag: "career_track_tech", present: true },
       ],
     },
     weight: 18,
@@ -1087,7 +1098,10 @@ const wealthTimelineEvents: LifeEvent[] = [
     trigger: {
       minAge: 20,
       maxAge: 36,
-      conditions: [{ type: "stat", stat: "education", op: ">=", value: 35 }],
+      conditions: [
+        { type: "stat", stat: "education", op: ">=", value: 35 },
+        { type: "tag", tag: "career_track_tech", present: false },
+      ],
     },
     weight: 15,
     once: true,
@@ -1102,6 +1116,7 @@ const wealthTimelineEvents: LifeEvent[] = [
           stat("stress", 7),
           stat("reputation", 3),
           tag("wealth_lawyer_path"),
+          tag("career_track_legal"),
           tag("world_legal_path"),
           milestone("law_exam_passed"),
           years(1),
@@ -1116,6 +1131,7 @@ const wealthTimelineEvents: LifeEvent[] = [
           stat("stress", 3),
           stat("reputation", 1),
           tag("wealth_legal_assistant"),
+          tag("career_track_legal"),
           tag("world_legal_path"),
           years(1),
         ],
@@ -1132,6 +1148,7 @@ const wealthTimelineEvents: LifeEvent[] = [
       maxAge: 60,
       conditions: [
         { type: "tag", tag: "wealth_lawyer_path", present: true },
+        { type: "tag", tag: "career_track_legal", present: true },
       ],
     },
     weight: 15,
@@ -1253,6 +1270,107 @@ const wealthTimelineEvents: LifeEvent[] = [
           tag("wealth_leverage_bet"),
           tag("wealth_risk_mark"),
           tag("world_capital_wind"),
+          years(1),
+        ],
+      },
+    ],
+  },
+];
+
+const careerChangeEvents: LifeEvent[] = [
+  {
+    id: "career_change_legal_to_tech",
+    stage: "any",
+    title: "法庭外的代码",
+    body: "你在一个技术案件里看了太多日志、接口和算法说明。某个深夜，你忽然意识到，自己这些年一直在解释别人的系统，也许也能亲手写一个属于自己的系统。",
+    trigger: {
+      minAge: 30,
+      maxAge: 55,
+      conditions: [
+        { type: "tag", tag: "career_track_legal", present: true },
+        { type: "tag", tag: "career_track_tech", present: false },
+        { type: "stat", stat: "education", op: ">=", value: 45 },
+      ],
+    },
+    weight: 12,
+    once: true,
+    choices: [
+      {
+        id: "pivot_from_law_to_tech",
+        text: "离开熟悉的案卷，重学技术",
+        effects: [
+          stat("education", 6),
+          stat("intelligence", 4),
+          stat("career", -4),
+          stat("wealth", -6),
+          stat("stress", 8),
+          untag("career_track_legal"),
+          tag("career_track_tech"),
+          tag("wealth_tech_degree"),
+          tag("wealth_code_skill"),
+          tag("career_changed_to_tech"),
+          tag("world_tech_venture"),
+          years(1),
+        ],
+      },
+      {
+        id: "remain_in_legal_track",
+        text: "把技术当作案件里的工具",
+        effects: [
+          stat("career", 5),
+          stat("reputation", 4),
+          stat("stress", 2),
+          tag("career_remained_legal"),
+          tag("world_legal_path"),
+          years(1),
+        ],
+      },
+    ],
+  },
+  {
+    id: "career_change_tech_to_legal",
+    stage: "any",
+    title: "代码后的法条",
+    body: "产品上线后，合同、合规、知识产权和责任边界一层层压过来。你突然发现，技术改变世界之前，先要被规则塑形。那天你把旧教材从柜子里翻了出来。",
+    trigger: {
+      minAge: 30,
+      maxAge: 55,
+      conditions: [
+        { type: "tag", tag: "career_track_tech", present: true },
+        { type: "tag", tag: "career_track_legal", present: false },
+        { type: "stat", stat: "education", op: ">=", value: 45 },
+      ],
+    },
+    weight: 12,
+    once: true,
+    choices: [
+      {
+        id: "pivot_from_tech_to_law",
+        text: "从产品和代码转向法律",
+        effects: [
+          stat("education", 7),
+          stat("career", -3),
+          stat("wealth", -5),
+          stat("stress", 7),
+          stat("reputation", 3),
+          untag("career_track_tech"),
+          tag("career_track_legal"),
+          tag("wealth_lawyer_path"),
+          tag("career_changed_to_legal"),
+          tag("world_legal_path"),
+          milestone("law_exam_passed"),
+          years(1),
+        ],
+      },
+      {
+        id: "remain_in_tech_track",
+        text: "留在技术里，把规则交给别人",
+        effects: [
+          stat("career", 5),
+          stat("wealth", 4),
+          stat("risk", 3),
+          tag("career_remained_tech"),
+          tag("world_tech_venture"),
           years(1),
         ],
       },
@@ -2562,6 +2680,7 @@ export const baseEvents: LifeEvent[] = [
   },
   ...everydayLifeEvents,
   ...wealthTimelineEvents,
+  ...careerChangeEvents,
   ...stageInterludeEvents,
   ...annualFallbackEvents,
   {

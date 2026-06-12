@@ -115,6 +115,74 @@ describe("base content", () => {
     });
   });
 
+  it("keeps career tracks hidden, mutually suppressed, and changeable", () => {
+    const eventById = new Map(
+      baseContent.events.map((event) => [event.id, event]),
+    );
+    const techDegree = eventById.get("wealth_tech_degree");
+    const techStartup = eventById.get("wealth_tech_startup");
+    const lawExam = eventById.get("wealth_law_exam");
+    const lawyerCase = eventById.get("wealth_lawyer_case");
+    const legalToTech = eventById.get("career_change_legal_to_tech");
+    const techToLegal = eventById.get("career_change_tech_to_legal");
+
+    expect(techDegree?.trigger?.conditions).toContainEqual({
+      type: "tag",
+      tag: "career_track_legal",
+      present: false,
+    });
+    expect(lawExam?.trigger?.conditions).toContainEqual({
+      type: "tag",
+      tag: "career_track_tech",
+      present: false,
+    });
+    expect(techStartup?.trigger?.conditions).toContainEqual({
+      type: "tag",
+      tag: "career_track_tech",
+      present: true,
+    });
+    expect(lawyerCase?.trigger?.conditions).toContainEqual({
+      type: "tag",
+      tag: "career_track_legal",
+      present: true,
+    });
+
+    expect(legalToTech?.trigger?.conditions).toContainEqual({
+      type: "tag",
+      tag: "career_track_legal",
+      present: true,
+    });
+    expect(techToLegal?.trigger?.conditions).toContainEqual({
+      type: "tag",
+      tag: "career_track_tech",
+      present: true,
+    });
+
+    const legalToTechEffects = legalToTech?.choices[0]?.effects ?? [];
+    expect(legalToTechEffects).toContainEqual({
+      type: "tag",
+      tag: "career_track_legal",
+      action: "remove",
+    });
+    expect(legalToTechEffects).toContainEqual({
+      type: "tag",
+      tag: "career_track_tech",
+      action: "add",
+    });
+
+    const techToLegalEffects = techToLegal?.choices[0]?.effects ?? [];
+    expect(techToLegalEffects).toContainEqual({
+      type: "tag",
+      tag: "career_track_tech",
+      action: "remove",
+    });
+    expect(techToLegalEffects).toContainEqual({
+      type: "tag",
+      tag: "career_track_legal",
+      action: "add",
+    });
+  });
+
   it("advances exactly one year per non-ending choice so every age can have a story", () => {
     for (const event of baseContent.events) {
       for (const choice of event.choices) {

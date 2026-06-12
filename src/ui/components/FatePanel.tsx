@@ -96,6 +96,10 @@ const tagLabels: Record<string, string> = {
   wealth_hidden_books: "账本阴影",
   wealth_compound_interest: "复利慢路",
   wealth_leverage_bet: "杠杆赌局",
+  career_changed_to_tech: "转向技术",
+  career_changed_to_legal: "转向法律",
+  career_remained_legal: "守住法律路",
+  career_remained_tech: "留在技术路",
   stage_childhood_end_seen: "童年落幕",
   stage_teen_end_seen: "少年退场",
   stage_young_adult_end_seen: "青年余温",
@@ -171,7 +175,8 @@ function uniqueRecent(values: string[], limit: number): string[] {
 }
 
 export function FatePanel({ run }: { run: RunState }) {
-  const tags = uniqueRecent(run.tags, 10);
+  const visibleTags = run.tags.filter((tag) => !tag.startsWith("career_track_"));
+  const tags = uniqueRecent(visibleTags, 10);
   const milestones = uniqueRecent(run.milestones, 5);
 
   return (
